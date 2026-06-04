@@ -8,6 +8,9 @@ app = FastAPI()
 class InterviewRequest(BaseModel):
     role: str
 
+class AnswerRequest(BaseModel):
+    question: str
+    answer: str
 
 questions = {
     "Python Developer": [
@@ -58,4 +61,24 @@ def generate_question(data: InterviewRequest):
     return {
         "role": data.role,
         "question": question
+    }
+@app.post("/evaluate-answer")
+def evaluate_answer(data: AnswerRequest):
+
+    answer_length = len(data.answer.split())
+
+    if answer_length >= 20:
+        score = 8
+        feedback = "Good answer. Try adding examples."
+    elif answer_length >= 10:
+        score = 6
+        feedback = "Decent answer. Add more details."
+    else:
+        score = 4
+        feedback = "Answer is too short. Explain more."
+
+    return {
+        "question": data.question,
+        "score": score,
+        "feedback": feedback
     }
