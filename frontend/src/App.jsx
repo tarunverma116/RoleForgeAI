@@ -811,6 +811,42 @@ export default function App() {
     setQuestionNumber(1); setScores([]); setHistory([]);
   };
 
+  const downloadReport = async () => {
+  try {
+    const response = await fetch(
+      "http://127.0.0.1:8000/generate-report",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          role: effectiveRole,
+          average_score: avg,
+          history: history,
+        }),
+      }
+    );
+
+    const blob = await response.blob();
+
+    const url = window.URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = "InterviewAce_Report.pdf";
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    link.remove();
+  } catch (error) {
+    console.error(error);
+  }
+};
+
   const avg = scores.length ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) : "—";
   const best = scores.length ? Math.max(...scores) : "—";
   const overallGrade = scores.length ? scoreGrade(parseFloat(avg)) : null;
@@ -1022,7 +1058,26 @@ export default function App() {
                 );
               })}
             </div>
-            <button className="restart-btn" onClick={restart}>↺ Start new interview</button>
+            <div
+  style={{
+    display: "flex",
+    gap: "12px",
+  }}
+>
+  <button
+    className="restart-btn"
+    onClick={downloadReport}
+  >
+    📄 Download Report
+  </button>
+
+  <button
+    className="restart-btn"
+    onClick={restart}
+  >
+    ↺ Start New Interview
+  </button>
+</div>
           </>
         )}
       </div>

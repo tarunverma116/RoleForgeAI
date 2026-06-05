@@ -1,3 +1,10 @@
+from fastapi.responses import FileResponse
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Paragraph,
+    Spacer
+)
+from reportlab.lib.styles import getSampleStyleSheet
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -49,6 +56,11 @@ class ResumeQuestionRequest(BaseModel):
 class AnswerRequest(BaseModel):
     question: str
     answer: str
+
+class ReportRequest(BaseModel):
+    role: str
+    average_score: str
+    history: list
 
 
 # =========================
@@ -260,3 +272,120 @@ Suggestion: <suggestion>
         return {
             "error": str(e)
         }
+@app.post("/generate-report")
+def generate_report(data: ReportRequest):
+
+    pdf_file = "Interview_Report.pdf"
+
+    doc = SimpleDocTemplate(pdf_file)
+
+    styles = getSampleStyleSheet()
+
+    content = []
+
+    # Title
+
+    content.append(
+        Paragraph(
+            "InterviewAce AI Report",
+            styles["Title"]
+        )
+    )
+
+    content.append(Spacer(1, 20))
+
+    # Summary
+
+    content.append(
+        Paragraph(
+            f"<b>Role:</b> {data.role}",
+            styles["Normal"]
+        )
+    )
+
+    content.append(
+        Paragraph(
+            f"<b>Average Score:</b> {data.average_score}/10",
+            styles["Normal"]
+        )
+    )
+
+    content.append(Spacer(1, 20))
+
+    # Questions History
+
+    for index, item in enumerate(data.history):
+
+        content.append(
+            Paragraph(
+                f"<b>Question {index + 1}</b>",
+                styles["Heading2"]
+            )
+        )
+
+        content.append(
+            Paragraph(
+                f"Question: {item['question']}",
+                styles["Normal"]
+            )
+        )
+
+        content.append(
+            Paragraph(
+                f"Answer: {item['answer']}",
+                styles["Normal"]
+            )
+        )
+
+        content.append(
+            Paragraph(
+                f"Score: {item['score']}/10",
+                styles["Normal"]
+            )
+        )
+
+        content.append(
+            Paragraph(
+                f"Feedback: {item['feedback']}",
+                styles["Normal"]
+            )
+        )
+
+        content.append(
+            Paragraph(
+                f"Suggestion: {item['suggestion']}",
+                styles["Normal"]
+            )
+        )
+
+        content.append(Spacer(1, 15))
+
+    # Final Verdict
+
+    avg = float(data.average_score)
+
+    if avg >= 8:
+        verdict = "Excellent Performance"
+    elif avg >= 6:
+        verdict = "Good Performance"
+    elif avg >= 4:
+        verdict = "Average Performance"
+    else:
+        verdict = "Needs Improvement"
+
+    content.append(Spacer(1, 20))
+
+    content.append(
+        Paragraph(
+            f"<b>Final Verdict:</b> {verdict}",
+            styles["Heading2"]
+        )
+    )
+
+    doc.build(content)
+
+    return FileResponse(
+        pdf_file,
+        media_type="application/pdf",
+        filename="Interview_Report.pdf"
+    )
