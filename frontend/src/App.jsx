@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, useCallback } from "react";
 
 // ─── CONSTANTS ───────────────────────────────────────────────────────────────
 
+const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+
 const ROLES = [
   { id: "Python Developer", label: "Python Developer", desc: "Backend & scripting", icon: "🐍", color: { bg: "#EEEDFE", icon: "#534AB7", border: "#AFA9EC" } },
   { id: "ML Engineer", label: "ML Engineer", desc: "Models & pipelines", icon: "🧠", color: { bg: "#E1F5EE", icon: "#0F6E56", border: "#5DCAA5" } },
@@ -747,7 +749,10 @@ export default function App() {
     if (!resumeFile) return "";
     try {
       const fd = new FormData(); fd.append("file", resumeFile);
-      const r = await fetch("http://127.0.0.1:8000/upload-resume", { method: "POST", body: fd });
+      const r = await fetch(`${API_URL}/upload-resume`, {
+  method: "POST",
+  body: fd
+});
       const d = await r.json();
       if (d.resume_text) { setResumeText(d.resume_text); return d.resume_text; }
     } catch (e) { console.error(e); }
@@ -759,7 +764,7 @@ export default function App() {
     const ep = hasR ? "/generate-resume-question" : "/generate-question";
     const body = hasR ? { role: effectiveRole, resume_text: resumeData, difficulty } : { role: effectiveRole, difficulty };
     try {
-      const r = await fetch(`http://127.0.0.1:8000${ep}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const r = await fetch(`${API_URL}${ep}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       const d = await r.json();
       if (d.error) { alert(d.error); return; }
       setQuestion(d.question);
@@ -781,7 +786,7 @@ export default function App() {
     if (!answer.trim()) { alert("Please write or speak an answer first."); return; }
     setSubmitting(true);
     try {
-      const r = await fetch("http://127.0.0.1:8000/evaluate-answer", {
+      const r = await fetch(`${API_URL}/evaluate-answer`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question, answer, difficulty }),
       });
@@ -814,7 +819,7 @@ export default function App() {
   const downloadReport = async () => {
   try {
     const response = await fetch(
-      "http://127.0.0.1:8000/generate-report",
+      `${API_URL}/generate-report`,
       {
         method: "POST",
         headers: {
