@@ -1,19 +1,23 @@
-# InterviewAce AI 🚀
+# RoleForge AI 🚀
 
-An AI-powered mock interview platform built using React, FastAPI, and Google Gemini.
+AI-powered mock interview platform that helps candidates prepare for technical interviews through role-specific questions, voice responses, real-time AI evaluation, resume-based interviews, and downloadable PDF reports.
 
-## Features
+## ✨ Features
 
-* AI-generated interview questions
+* AI-generated role-specific interview questions
 * Resume PDF upload and parsing
 * Resume-based interview questions
-* AI-powered answer evaluation
-* Multi-round interview process
-* Performance analytics and scoring
-* Interview history tracking
-* Downloadable PDF interview reports
+* Voice answer support
+* Real-time answer evaluation
+* Detailed feedback and improvement suggestions
+* Multi-round interview experience
+* Downloadable PDF performance reports
+* Modern responsive UI
+* Deployed frontend and backend
 
-## Tech Stack
+---
+
+## 🛠 Tech Stack
 
 ### Frontend
 
@@ -28,23 +32,28 @@ An AI-powered mock interview platform built using React, FastAPI, and Google Gem
 
 ### AI
 
-* Google Gemini API
+* OpenRouter API
+* Google Gemma 4 31B
 
 ### PDF Generation
 
 * ReportLab
 
-## Project Workflow
+---
 
-1. Select interview role
-2. Upload resume (optional)
+## 🚀 Workflow
+
+1. Select your target role
+2. Upload your resume (optional)
 3. Generate AI interview questions
-4. Submit answers
-5. Receive AI evaluation and score
-6. Complete interview rounds
-7. Download detailed PDF performance report
+4. Answer using text or voice
+5. Receive AI-generated evaluation
+6. Review feedback and suggestions
+7. Download detailed PDF report
 
-## Installation
+---
+
+## 📦 Installation
 
 ### Backend
 
@@ -62,13 +71,33 @@ npm install
 npm run dev
 ```
 
-## Future Improvements
+---
 
-* Voice interview mode
-* Real-time speech evaluation
-* Deployment on Vercel and Render
-* Advanced analytics dashboard
+## 🎯 Supported Roles
 
-## Author
+* Python Developer
+* Java Developer
+* ML Engineer
+* Data Analyst
+* Frontend Developer
+* Backend Developer
+* Custom Roles
+
+---
+
+## 🔮 Future Improvements
+
+* User authentication
+* Interview history dashboard
+* Advanced analytics
+* Company-specific interview modes
+* Custom interview difficulty levels
+* Shareable interview reports
+
+---
+
+## 👨‍💻 Author
 
 Tarun Verma
+
+Built as a full-stack AI project using React, FastAPI, OpenRouter, and modern deployment platforms.
