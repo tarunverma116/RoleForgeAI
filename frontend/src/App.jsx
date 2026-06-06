@@ -5,44 +5,45 @@ import { useState, useEffect, useRef, useCallback } from "react";
 const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 const ROLES = [
-  { id: "Python Developer", label: "Python Developer", desc: "Backend & scripting", icon: "🐍", color: { bg: "#EEEDFE", icon: "#534AB7", border: "#AFA9EC" } },
-  { id: "ML Engineer", label: "ML Engineer", desc: "Models & pipelines", icon: "🧠", color: { bg: "#E1F5EE", icon: "#0F6E56", border: "#5DCAA5" } },
-  { id: "Java Developer", label: "Java Developer", desc: "Enterprise & OOP", icon: "☕", color: { bg: "#FAEEDA", icon: "#854F0B", border: "#EF9F27" } },
-  { id: "AIML Intern", label: "AIML Intern", desc: "AI fundamentals", icon: "🤖", color: { bg: "#FAECE7", icon: "#993C1D", border: "#F0997B" } },
-  { id: "Frontend Developer", label: "Frontend Developer", desc: "React, CSS, UX", icon: "🎨", color: { bg: "#E6F1FB", icon: "#185FA5", border: "#85B7EB" } },
-  { id: "Data Analyst", label: "Data Analyst", desc: "SQL, stats, BI", icon: "📊", color: { bg: "#EAF3DE", icon: "#3B6D11", border: "#97C459" } },
-  { id: "custom", label: "Custom role", desc: "Type your own", icon: "✏️", color: { bg: "#FBEAF0", icon: "#993556", border: "#ED93B1" } },
+  { id: "Python Developer", label: "Python Developer", desc: "Backend & scripting", icon: "🐍", accent: "#7C6FF7" },
+  { id: "ML Engineer", label: "ML Engineer", desc: "Models & pipelines", icon: "🧠", accent: "#10B981" },
+  { id: "Java Developer", label: "Java Developer", desc: "Enterprise & OOP", icon: "☕", accent: "#F59E0B" },
+  { id: "AIML Intern", label: "AIML Intern", desc: "AI fundamentals", icon: "🤖", accent: "#EF4444" },
+  { id: "Frontend Developer", label: "Frontend Developer", desc: "React, CSS, UX", icon: "🎨", accent: "#3B82F6" },
+  { id: "Data Analyst", label: "Data Analyst", desc: "SQL, stats, BI", icon: "📊", accent: "#22C55E" },
+  { id: "custom", label: "Custom Role", desc: "Type your own", icon: "✏️", accent: "#EC4899" },
 ];
 
 const DIFFICULTIES = [
-  { id: "easy", label: "Easy", icon: "🌱" },
-  { id: "medium", label: "Medium", icon: "🔥" },
-  { id: "hard", label: "Hard", icon: "⚡" },
+  { id: "easy", label: "Easy", icon: "🌱", desc: "Fundamentals", color: "#10B981" },
+  { id: "medium", label: "Medium", icon: "🔥", desc: "Practical", color: "#F59E0B" },
+  { id: "hard", label: "Hard", icon: "⚡", desc: "Expert-level", color: "#EF4444" },
 ];
 
 const Q_TYPES = ["Technical", "Behavioural", "Situational", "System Design", "Conceptual"];
-const Q_COLORS = [
-  { bg: "#EEEDFE", text: "#3C3489", border: "#AFA9EC" },
-  { bg: "#E1F5EE", text: "#085041", border: "#5DCAA5" },
-  { bg: "#FAEEDA", text: "#633806", border: "#EF9F27" },
-  { bg: "#FAECE7", text: "#712B13", border: "#F0997B" },
-  { bg: "#E6F1FB", text: "#0C447C", border: "#85B7EB" },
-];
+const Q_TYPE_COLORS = {
+  Technical: { bg: "rgba(124,111,247,0.15)", text: "#A78BFA", border: "rgba(167,139,250,0.3)" },
+  Behavioural: { bg: "rgba(16,185,129,0.15)", text: "#34D399", border: "rgba(52,211,153,0.3)" },
+  Situational: { bg: "rgba(245,158,11,0.15)", text: "#FCD34D", border: "rgba(252,211,77,0.3)" },
+  "System Design": { bg: "rgba(239,68,68,0.15)", text: "#FCA5A5", border: "rgba(252,165,165,0.3)" },
+  Conceptual: { bg: "rgba(59,130,246,0.15)", text: "#93C5FD", border: "rgba(147,197,253,0.3)" },
+};
+
 const TIPS = [
-  "Be specific — use concrete examples",
-  "Structure with Situation, Task, Action, Result",
-  "Keep your answer under 2 minutes when speaking",
-  "Mention tools and technologies by name",
-  "Show your reasoning, not just the answer",
+  "Be specific — use concrete examples from real projects",
+  "Structure answers using Situation, Task, Action, Result",
+  "Keep spoken answers under 2 minutes for maximum impact",
+  "Name specific tools, frameworks, and technologies you used",
+  "Show your reasoning process, not just the final answer",
 ];
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
 function scoreGrade(s) {
-  if (s >= 9) return { label: "Excellent", sub: "Outstanding answer", main: "#0F6E56", bg: "#E1F5EE", border: "#5DCAA5" };
-  if (s >= 7) return { label: "Good", sub: "Strong response, minor gaps", main: "#3B6D11", bg: "#EAF3DE", border: "#97C459" };
-  if (s >= 5) return { label: "Average", sub: "Decent but needs more depth", main: "#854F0B", bg: "#FAEEDA", border: "#EF9F27" };
-  return { label: "Needs work", sub: "Review core concepts", main: "#993C1D", bg: "#FAECE7", border: "#F0997B" };
+  if (s >= 9) return { label: "Excellent", sub: "Outstanding answer", color: "#10B981", glow: "rgba(16,185,129,0.3)" };
+  if (s >= 7) return { label: "Good", sub: "Strong response, minor gaps", color: "#22C55E", glow: "rgba(34,197,94,0.3)" };
+  if (s >= 5) return { label: "Average", sub: "Decent but needs more depth", color: "#F59E0B", glow: "rgba(245,158,11,0.3)" };
+  return { label: "Needs Work", sub: "Review core concepts", color: "#EF4444", glow: "rgba(239,68,68,0.3)" };
 }
 
 function formatTime(seconds) {
@@ -51,352 +52,896 @@ function formatTime(seconds) {
   return `${m}:${s}`;
 }
 
+// ─── THEME CONTEXT ───────────────────────────────────────────────────────────
+
+const LIGHT = {
+  "--bg": "#F0F2F7",
+  "--bg2": "#FFFFFF",
+  "--bg3": "#F7F8FC",
+  "--surface": "rgba(255,255,255,0.85)",
+  "--surface2": "rgba(255,255,255,0.6)",
+  "--border": "rgba(0,0,0,0.08)",
+  "--border2": "rgba(0,0,0,0.05)",
+  "--text": "#0F172A",
+  "--text2": "#475569",
+  "--text3": "#94A3B8",
+  "--accent": "#7C6FF7",
+  "--accent2": "#10B981",
+  "--shadow": "0 4px 24px rgba(0,0,0,0.08)",
+  "--shadow2": "0 8px 40px rgba(0,0,0,0.12)",
+  "--glow": "0 0 40px rgba(124,111,247,0.15)",
+  "--noise": "0",
+};
+
+const DARK = {
+  "--bg": "#080B14",
+  "--bg2": "#0E1220",
+  "--bg3": "#131826",
+  "--surface": "rgba(255,255,255,0.04)",
+  "--surface2": "rgba(255,255,255,0.02)",
+  "--border": "rgba(255,255,255,0.08)",
+  "--border2": "rgba(255,255,255,0.04)",
+  "--text": "#F0F4FF",
+  "--text2": "#8899BB",
+  "--text3": "#4A5568",
+  "--accent": "#7C6FF7",
+  "--accent2": "#10B981",
+  "--shadow": "0 4px 24px rgba(0,0,0,0.4)",
+  "--shadow2": "0 8px 40px rgba(0,0,0,0.6)",
+  "--glow": "0 0 60px rgba(124,111,247,0.2)",
+  "--noise": "1",
+};
+
 // ─── STYLES ──────────────────────────────────────────────────────────────────
 
 const css = `
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap');
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; color: #0f172a; min-height: 100vh; }
-.page { max-width: 760px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
-.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; padding-bottom: 1.25rem; border-bottom: 1px solid #e2e8f0; }
+
+:root {
+  --transition: 0.25s cubic-bezier(0.4,0,0.2,1);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --radius-xs: 7px;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'DM Sans', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  transition: background 0.4s ease, color 0.4s ease;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── NOISE OVERLAY ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: calc(var(--noise, 0) * 0.025);
+  pointer-events: none;
+  z-index: 9999;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  background-size: 256px;
+}
+
+/* ── AMBIENT GLOW ── */
+.ambient-glow {
+  position: fixed;
+  pointer-events: none;
+  z-index: 0;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.12;
+  transition: opacity 0.5s;
+}
+.ambient-1 { width: 500px; height: 500px; background: #7C6FF7; top: -150px; right: -150px; }
+.ambient-2 { width: 400px; height: 400px; background: #10B981; bottom: -100px; left: -100px; }
+
+/* ── LAYOUT ── */
+.app-shell {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}
+.page {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 0 1.25rem 5rem;
+}
+
+/* ── HEADER ── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 0 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1.75rem;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: background 0.4s;
+}
+
 .brand { display: flex; align-items: center; gap: 12px; }
-.brand-icon { width: 46px; height: 46px; border-radius: 12px; background: #EEEDFE; border: 1px solid #AFA9EC; display: flex; align-items: center; justify-content: center; font-size: 22px; }
-.brand-name { font-size: 18px; font-weight: 600; color: #0f172a; }
-.brand-sub { font-size: 12px; color: #64748b; margin-top: 1px; }
-.ai-badge { font-size: 11px; padding: 4px 12px; border-radius: 20px; background: #EEEDFE; color: #3C3489; font-weight: 500; border: 1px solid #AFA9EC; }
+.brand-logo {
+  width: 42px; height: 42px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #7C6FF7, #A78BFA);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  box-shadow: 0 4px 16px rgba(124,111,247,0.35);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.brand-logo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 60%);
+}
+.brand-name {
+  font-family: 'Syne', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+.brand-sub { font-size: 11px; color: var(--text3); margin-top: 1px; font-weight: 400; }
 
-.step-track { display: flex; align-items: center; margin-bottom: 2rem; }
+.header-right { display: flex; align-items: center; gap: 10px; }
+
+.ai-badge {
+  font-size: 11px;
+  padding: 4px 11px;
+  border-radius: 20px;
+  background: rgba(124,111,247,0.12);
+  color: #A78BFA;
+  font-weight: 600;
+  border: 1px solid rgba(167,139,250,0.25);
+  letter-spacing: 0.01em;
+}
+
+/* ── THEME TOGGLE ── */
+.theme-toggle {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text2);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  transition: all var(--transition);
+  backdrop-filter: blur(8px);
+}
+.theme-toggle:hover {
+  background: var(--bg3);
+  border-color: var(--accent);
+  color: var(--text);
+  transform: rotate(15deg);
+}
+
+/* ── STEP TRACK ── */
+.step-track {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2rem;
+  gap: 0;
+}
 .step-item { display: flex; align-items: center; gap: 8px; }
-.step-line { flex: 1; height: 1px; background: #e2e8f0; margin: 0 8px; }
-.step-line.done { background: #0F6E56; }
-.step-dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; border: 1px solid #e2e8f0; background: #f8fafc; color: #94a3b8; transition: all 0.3s; }
-.step-dot.active { background: #534AB7; color: #EEEDFE; border-color: #534AB7; }
-.step-dot.done { background: #0F6E56; color: #E1F5EE; border-color: #0F6E56; }
-.step-label { font-size: 12px; color: #94a3b8; white-space: nowrap; }
-.step-label.active { color: #3C3489; font-weight: 600; }
+.step-connector {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+  margin: 0 8px;
+  position: relative;
+  overflow: hidden;
+}
+.step-connector-fill {
+  position: absolute;
+  top: 0; left: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #7C6FF7, #10B981);
+  transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+}
+.step-dot {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+  flex-shrink: 0;
+  border: 1.5px solid var(--border);
+  background: var(--bg3);
+  color: var(--text3);
+  transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  font-family: 'Syne', sans-serif;
+}
+.step-dot.active {
+  background: #7C6FF7;
+  border-color: #7C6FF7;
+  color: #fff;
+  box-shadow: 0 0 0 4px rgba(124,111,247,0.2);
+  transform: scale(1.1);
+}
+.step-dot.done {
+  background: #10B981;
+  border-color: #10B981;
+  color: #fff;
+}
+.step-label { font-size: 11px; color: var(--text3); font-weight: 500; white-space: nowrap; }
+.step-label.active { color: #A78BFA; font-weight: 600; }
+.step-label.done { color: #34D399; }
 
-.setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
-.field-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; }
-.field-card.full { grid-column: 1 / -1; }
-.field-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: #94a3b8; margin-bottom: .75rem; display: flex; align-items: center; gap: 6px; }
+/* ── CARDS / SURFACES ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: border-color var(--transition), box-shadow var(--transition), background 0.4s;
+}
+.card:hover { border-color: rgba(124,111,247,0.3); }
+.card-inner { padding: 1.25rem 1.5rem; }
 
-.role-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-.role-card { border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px; background: #fff; }
-.role-card:hover { border-color: #AFA9EC; background: #EEEDFE; }
-.role-card.selected { border-color: #534AB7; background: #EEEDFE; }
-.role-card.selected .role-name { color: #3C3489; font-weight: 600; }
-.role-icon-box { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
-.role-name { font-size: 12px; color: #0f172a; font-weight: 500; }
-.role-desc { font-size: 11px; color: #94a3b8; margin-top: 1px; }
-.custom-input { margin-top: 10px; display: flex; gap: 8px; }
-.custom-input input { flex: 1; padding: 9px 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px; color: #0f172a; outline: none; background: #fff; }
-.custom-input input:focus { border-color: #534AB7; }
+/* ── SECTION LABEL ── */
+.section-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--text3);
+  margin-bottom: .85rem;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.section-label-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
 
+/* ── SETUP GRID ── */
+.setup-grid { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1rem; }
+.setup-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+/* ── ROLE GRID ── */
+.role-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.role-card {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.34,1.56,0.64,1);
+  background: var(--surface2);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  position: relative;
+  overflow: hidden;
+}
+.role-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--role-accent, #7C6FF7);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.role-card:hover { transform: translateY(-2px); border-color: var(--role-accent, #7C6FF7); }
+.role-card:hover::before { opacity: 0.06; }
+.role-card.selected { border-color: var(--role-accent, #7C6FF7); transform: translateY(-2px); }
+.role-card.selected::before { opacity: 0.1; }
+.role-icon-box {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+  background: var(--role-accent-bg, rgba(124,111,247,0.12));
+  position: relative;
+  z-index: 1;
+}
+.role-text { position: relative; z-index: 1; }
+.role-name { font-size: 11px; font-weight: 600; color: var(--text); }
+.role-desc { font-size: 10px; color: var(--text3); margin-top: 1px; }
+
+.custom-input { margin-top: 10px; }
+.custom-input input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+  background: var(--surface2);
+  transition: border-color var(--transition);
+  font-family: 'DM Sans', sans-serif;
+}
+.custom-input input:focus { border-color: var(--accent); }
+.custom-input input::placeholder { color: var(--text3); }
+
+/* ── DIFFICULTY ── */
 .diff-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.diff-btn { border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 6px; cursor: pointer; text-align: center; font-size: 12px; font-weight: 600; background: #fff; color: #94a3b8; transition: all 0.2s; }
-.diff-btn span { display: block; font-size: 18px; margin-bottom: 3px; }
-.diff-btn:hover, .diff-btn.active-easy { border-color: #5DCAA5; background: #E1F5EE; color: #085041; }
-.diff-btn.active-medium { border-color: #EF9F27; background: #FAEEDA; color: #633806; }
-.diff-btn.active-hard { border-color: #F0997B; background: #FAECE7; color: #712B13; }
+.diff-btn {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 8px;
+  cursor: pointer;
+  text-align: center;
+  background: var(--surface2);
+  color: var(--text3);
+  transition: all 0.2s cubic-bezier(0.34,1.56,0.64,1);
+  position: relative;
+  overflow: hidden;
+}
+.diff-btn span.icon { display: block; font-size: 20px; margin-bottom: 4px; }
+.diff-btn .label { font-size: 12px; font-weight: 600; }
+.diff-btn .desc { font-size: 10px; margin-top: 2px; color: var(--text3); }
+.diff-btn:hover { transform: translateY(-2px); }
+.diff-btn.active { transform: translateY(-2px); color: var(--text); }
+.diff-btn.active .desc { color: inherit; opacity: 0.7; }
 
-.file-drop { border: 1px dashed #cbd5e1; border-radius: 8px; padding: 1.25rem; text-align: center; cursor: pointer; transition: all 0.2s; background: #f8fafc; }
-.file-drop:hover { border-color: #534AB7; background: #EEEDFE; }
-.file-drop.has-file { border-style: solid; border-color: #0F6E56; background: #E1F5EE; }
-.file-drop .fd-icon { font-size: 24px; margin-bottom: 6px; }
-.file-drop p { font-size: 12px; color: #64748b; }
-.file-drop.has-file p { color: #085041; }
-.file-chip { display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; font-size: 11px; background: #E1F5EE; color: #085041; padding: 3px 10px; border-radius: 20px; border: 1px solid #5DCAA5; }
+/* ── FILE DROP ── */
+.file-drop {
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1.1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition);
+  background: var(--surface2);
+  position: relative;
+  overflow: hidden;
+}
+.file-drop:hover { border-color: #7C6FF7; background: rgba(124,111,247,0.05); }
+.file-drop.has-file { border-style: solid; border-color: #10B981; background: rgba(16,185,129,0.05); }
+.fd-icon { font-size: 22px; margin-bottom: 5px; }
+.fd-text { font-size: 11px; color: var(--text2); }
+.file-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  margin-top: 6px; font-size: 10px;
+  background: rgba(16,185,129,0.12); color: #34D399;
+  padding: 3px 10px; border-radius: 20px;
+  border: 1px solid rgba(52,211,153,0.25);
+  font-weight: 500;
+}
 
-.tips-bar { display: flex; gap: 10px; align-items: flex-start; background: #EEEDFE; border: 1px solid #AFA9EC; border-radius: 10px; padding: .75rem 1rem; margin-bottom: 1.25rem; }
-.tips-bar-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
-.tips-bar p { font-size: 12px; color: #3C3489; line-height: 1.5; }
+/* ── INFO BAR ── */
+.info-bar {
+  display: flex; gap: 10px; align-items: flex-start;
+  background: rgba(124,111,247,0.08);
+  border: 1px solid rgba(167,139,250,0.2);
+  border-radius: var(--radius-sm);
+  padding: .85rem 1rem;
+  margin-bottom: 1.25rem;
+}
+.info-bar-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+.info-bar p { font-size: 12px; color: #A78BFA; line-height: 1.6; }
 
-.start-btn { width: 100%; padding: 13px; border-radius: 10px; background: #534AB7; color: #EEEDFE; border: none; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity 0.2s; }
-.start-btn:hover { opacity: 0.88; }
-.start-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+/* ── PRIMARY BUTTON ── */
+.primary-btn {
+  width: 100%;
+  padding: 13px 20px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, #7C6FF7, #9D8FFA);
+  color: #fff;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  transition: all var(--transition);
+  font-family: 'DM Sans', sans-serif;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(124,111,247,0.35);
+}
+.primary-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+.primary-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(124,111,247,0.5); }
+.primary-btn:hover::before { opacity: 1; }
+.primary-btn:active { transform: translateY(0); }
+.primary-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
 
-.q-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
-.q-counter { font-size: 13px; font-weight: 600; color: #0f172a; }
-.q-role-tag { font-size: 11px; padding: 3px 10px; border-radius: 20px; background: #EEEDFE; color: #3C3489; border: 1px solid #AFA9EC; font-weight: 500; }
+.success-btn {
+  background: linear-gradient(135deg, #10B981, #34D399);
+  box-shadow: 0 4px 20px rgba(16,185,129,0.35);
+}
+.success-btn:hover { box-shadow: 0 6px 28px rgba(16,185,129,0.5); }
+
+.finish-btn {
+  background: linear-gradient(135deg, #7C6FF7, #EC4899);
+  box-shadow: 0 4px 20px rgba(124,111,247,0.35);
+}
+
+/* ── QUESTION SCREEN ── */
+.q-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.q-counter {
+  font-family: 'Syne', sans-serif;
+  font-size: 14px; font-weight: 700;
+  color: var(--text);
+}
+.q-role-tag {
+  font-size: 11px; padding: 4px 12px;
+  border-radius: 20px;
+  background: rgba(124,111,247,0.1);
+  color: #A78BFA;
+  border: 1px solid rgba(167,139,250,0.2);
+  font-weight: 500;
+}
+
+/* Progress */
 .prog-wrap { margin-bottom: 1.5rem; }
-.prog-bar { height: 4px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
-.prog-fill { height: 100%; background: linear-gradient(90deg, #534AB7, #5DCAA5); border-radius: 4px; transition: width 0.5s ease; }
-.prog-labels { display: flex; justify-content: space-between; margin-top: 5px; font-size: 11px; color: #94a3b8; }
+.prog-bar {
+  height: 4px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.prog-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #7C6FF7, #10B981);
+  border-radius: 4px;
+  transition: width 0.7s cubic-bezier(0.4,0,0.2,1);
+  position: relative;
+}
+.prog-fill::after {
+  content: '';
+  position: absolute;
+  right: 0; top: 0;
+  height: 100%; width: 20px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3));
+  animation: shimmer 1.5s ease infinite;
+}
+@keyframes shimmer { 0%,100% { opacity: 0; } 50% { opacity: 1; } }
 
-.q-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; margin-bottom: 1rem; }
-.q-card-top { padding: 1.25rem 1.5rem; border-bottom: 1px solid #e2e8f0; background: #f8fafc; }
-.q-type-badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; margin-bottom: .75rem; border: 1px solid; }
-.q-text { font-size: 15px; line-height: 1.7; color: #0f172a; }
+.prog-labels {
+  display: flex; justify-content: space-between;
+  margin-top: 6px; font-size: 11px; color: var(--text3);
+}
+
+/* Question card */
+.q-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 1rem;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: slideUp 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.q-card-top {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+}
+.q-type-badge {
+  display: inline-block;
+  font-size: 10px; font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  margin-bottom: .75rem;
+  border: 1px solid;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.q-text {
+  font-size: 15px; line-height: 1.75;
+  color: var(--text);
+  font-weight: 400;
+}
+
 .q-card-body { padding: 1.25rem 1.5rem; }
-.ans-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: #94a3b8; margin-bottom: .5rem; display: flex; align-items: center; justify-content: space-between; }
-.char-count { font-size: 11px; color: #cbd5e1; font-weight: 400; text-transform: none; letter-spacing: 0; }
-textarea { width: 100%; min-height: 130px; resize: vertical; font-family: inherit; font-size: 14px; line-height: 1.6; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; color: #0f172a; background: #fff; outline: none; transition: border-color 0.2s; }
-textarea:focus { border-color: #534AB7; }
-textarea.listening { border-color: #0F6E56; box-shadow: 0 0 0 3px rgba(15,110,86,0.10); }
-.tip-row { display: flex; align-items: center; gap: 6px; margin-top: .75rem; }
-.tip-row span { font-size: 12px; color: #94a3b8; }
-.submit-btn { width: 100%; margin-top: .75rem; padding: 12px; border-radius: 8px; background: #534AB7; color: #EEEDFE; border: none; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity 0.2s; }
-.submit-btn:hover { opacity: 0.88; }
-.submit-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.ans-label {
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .1em;
+  color: var(--text3);
+  margin-bottom: .6rem;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.char-count { font-size: 11px; color: var(--text3); font-weight: 400; text-transform: none; letter-spacing: 0; }
+.char-count.warn { color: #F59E0B; }
+
+textarea {
+  width: 100%;
+  min-height: 120px;
+  resize: vertical;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13.5px;
+  line-height: 1.65;
+  padding: 12px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  background: var(--bg3);
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124,111,247,0.12); }
+textarea.listening { border-color: #10B981; box-shadow: 0 0 0 3px rgba(16,185,129,0.12); }
+textarea::placeholder { color: var(--text3); }
+
+.tip-row {
+  display: flex; align-items: flex-start; gap: 7px;
+  margin-top: .75rem; padding: .6rem .85rem;
+  background: rgba(124,111,247,0.06);
+  border-radius: var(--radius-xs);
+  border-left: 2px solid rgba(167,139,250,0.4);
+}
+.tip-row span { font-size: 12px; color: #A78BFA; line-height: 1.5; }
 
 /* ── VOICE PANEL ── */
 .voice-panel {
   margin-top: 1rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--radius-sm);
   overflow: hidden;
-  background: #0f172a;
+  background: #0a0f1e;
 }
 .voice-panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 14px;
-  background: #1e293b;
-  border-bottom: 1px solid #334155;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 14px;
+  background: rgba(255,255,255,0.03);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 .voice-panel-title {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: .08em;
-  color: #94a3b8;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .1em;
+  color: #4B5563;
+  display: flex; align-items: center; gap: 6px;
 }
 .voice-support-badge {
-  font-size: 10px;
-  padding: 2px 8px;
-  border-radius: 20px;
-  font-weight: 600;
+  font-size: 10px; padding: 2px 8px;
+  border-radius: 20px; font-weight: 600;
 }
-.voice-support-badge.supported { background: #E1F5EE; color: #085041; border: 1px solid #5DCAA5; }
-.voice-support-badge.unsupported { background: #FAECE7; color: #712B13; border: 1px solid #F0997B; }
-.voice-body {
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.voice-controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.voice-btn {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 9px 16px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s;
-  flex-shrink: 0;
-}
-.voice-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-.voice-btn-start {
-  background: #0F6E56;
-  color: #E1F5EE;
-}
-.voice-btn-start:not(:disabled):hover {
-  background: #0a5441;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(15,110,86,0.35);
-}
-.voice-btn-stop {
-  background: #c0392b;
-  color: #fff;
-}
-.voice-btn-stop:not(:disabled):hover {
-  background: #a93226;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(192,57,43,0.35);
-}
-.voice-status {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-  min-width: 0;
-}
-.voice-status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.voice-status-dot.idle { background: #475569; }
-.voice-status-dot.listening {
-  background: #22c55e;
-  animation: voice-pulse 1.2s ease-in-out infinite;
-}
-.voice-status-dot.error { background: #ef4444; }
-@keyframes voice-pulse {
-  0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(34,197,94,0.6); }
-  50% { opacity: 0.85; transform: scale(1.1); box-shadow: 0 0 0 5px rgba(34,197,94,0); }
-}
-.voice-status-text {
-  font-size: 12px;
-  color: #94a3b8;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.voice-status-text.active { color: #22c55e; font-weight: 500; }
-.voice-status-text.error-txt { color: #f87171; }
+.voice-support-badge.supported { background: rgba(16,185,129,0.12); color: #34D399; border: 1px solid rgba(52,211,153,0.2); }
+.voice-support-badge.unsupported { background: rgba(239,68,68,0.12); color: #FCA5A5; border: 1px solid rgba(252,165,165,0.2); }
 
-/* Waveform */
+.voice-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+.voice-controls { display: flex; align-items: center; gap: 8px; }
+
+.voice-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 14px;
+  border-radius: 7px;
+  font-size: 12px; font-weight: 600;
+  border: none; cursor: pointer;
+  transition: all 0.2s; flex-shrink: 0;
+  font-family: 'DM Sans', sans-serif;
+}
+.voice-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.voice-btn-start { background: #10B981; color: #fff; }
+.voice-btn-start:not(:disabled):hover { background: #059669; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(16,185,129,0.4); }
+.voice-btn-stop { background: #EF4444; color: #fff; }
+.voice-btn-stop:not(:disabled):hover { background: #DC2626; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(239,68,68,0.4); }
+
+.voice-status { display: flex; align-items: center; gap: 7px; flex: 1; min-width: 0; }
+.voice-status-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.voice-status-dot.idle { background: #374151; }
+.voice-status-dot.listening { background: #10B981; animation: vPulse 1.2s ease-in-out infinite; }
+.voice-status-dot.error { background: #EF4444; }
+@keyframes vPulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.6); }
+  50% { box-shadow: 0 0 0 5px rgba(16,185,129,0); }
+}
+.voice-status-text { font-size: 11px; color: #4B5563; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.voice-status-text.active { color: #10B981; font-weight: 500; }
+.voice-status-text.error-txt { color: #FCA5A5; }
+
 .voice-waveform {
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  padding: 4px 0;
+  height: 32px; display: flex; align-items: center;
+  justify-content: center; gap: 3px;
 }
 .waveform-bar {
-  width: 3px;
-  border-radius: 2px;
-  background: #334155;
-  transition: height 0.1s ease, background 0.2s;
-  min-height: 4px;
+  width: 3px; border-radius: 2px;
+  background: #1F2937; transition: height 0.1s ease;
+  min-height: 3px;
 }
-.waveform-bar.active {
-  background: #22c55e;
-}
+.waveform-bar.active { background: #10B981; }
 
-/* Timer + char counter row */
 .voice-meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 4px;
-  border-top: 1px solid #1e293b;
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.04);
 }
-.voice-timer {
-  font-size: 11px;
-  font-weight: 600;
-  color: #475569;
-  font-variant-numeric: tabular-nums;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-.voice-timer.active { color: #22c55e; }
-.voice-char-count {
-  font-size: 11px;
-  color: #475569;
-}
-.voice-char-count.has-content { color: #7dd3fc; }
+.voice-timer { font-size: 11px; font-weight: 600; color: #374151; font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 5px; }
+.voice-timer.active { color: #10B981; }
+.voice-char-count { font-size: 11px; color: #374151; }
+.voice-char-count.has-content { color: #60A5FA; }
 
-/* Error toast */
 .voice-error-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(239,68,68,0.12);
-  border: 1px solid rgba(239,68,68,0.3);
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 12px;
-  color: #fca5a5;
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2);
+  border-radius: 7px; padding: 7px 10px;
+  font-size: 11px; color: #FCA5A5;
 }
 .voice-error-bar button {
-  margin-left: auto;
-  background: none;
-  border: none;
-  color: #fca5a5;
-  cursor: pointer;
-  font-size: 14px;
-  padding: 0;
-  line-height: 1;
-  flex-shrink: 0;
+  margin-left: auto; background: none; border: none;
+  color: #FCA5A5; cursor: pointer; font-size: 14px; padding: 0; line-height: 1;
 }
 
-.eval-score-header { display: flex; align-items: center; gap: 1.25rem; padding: 1.25rem 1.5rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: .75rem; }
+/* ── EVAL / SCORE ── */
+.eval-container { animation: slideUp 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+
+.eval-score-card {
+  display: flex; align-items: center; gap: 1.25rem;
+  padding: 1.25rem 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: .85rem;
+  backdrop-filter: blur(12px);
+}
 .score-circle { flex-shrink: 0; }
 .score-meta { flex: 1; }
-.score-grade-label { font-size: 16px; font-weight: 600; color: #0f172a; margin-bottom: 3px; }
-.score-grade-sub { font-size: 13px; color: #64748b; margin-bottom: 10px; }
-.score-bar-bg { height: 6px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
-.score-bar-fill { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
+.score-grade-label {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px; font-weight: 700;
+  color: var(--text); margin-bottom: 3px;
+}
+.score-grade-sub { font-size: 12px; color: var(--text2); margin-bottom: 10px; }
+.score-bar-bg { height: 5px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.score-bar-fill { height: 100%; border-radius: 4px; transition: width 1s cubic-bezier(0.4,0,0.2,1); }
 
-.eval-panels { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; margin-bottom: .75rem; }
-.eval-panel { border-radius: 12px; padding: 1rem 1.25rem; border: 1px solid; }
+.eval-panels {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: .75rem; margin-bottom: .85rem;
+}
+.eval-panel {
+  border-radius: var(--radius-sm);
+  padding: 1rem 1.25rem;
+  border: 1px solid;
+  backdrop-filter: blur(8px);
+}
 .eval-panel-head { display: flex; align-items: center; gap: 8px; margin-bottom: .5rem; }
-.eval-panel-icon { font-size: 16px; }
-.eval-panel-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; }
-.eval-panel-body { font-size: 13px; line-height: 1.6; }
-.ep-feedback { background: #EEEDFE; border-color: #AFA9EC; }
-.ep-feedback .eval-panel-title { color: #534AB7; }
-.ep-feedback .eval-panel-body { color: #3C3489; }
-.ep-suggest { background: #E1F5EE; border-color: #5DCAA5; }
-.ep-suggest .eval-panel-title { color: #0F6E56; }
-.ep-suggest .eval-panel-body { color: #085041; }
+.eval-panel-icon { font-size: 15px; }
+.eval-panel-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; }
+.eval-panel-body { font-size: 12.5px; line-height: 1.65; }
+.ep-feedback { background: rgba(124,111,247,0.08); border-color: rgba(167,139,250,0.2); }
+.ep-feedback .eval-panel-title { color: #A78BFA; }
+.ep-feedback .eval-panel-body { color: var(--text2); }
+.ep-suggest { background: rgba(16,185,129,0.08); border-color: rgba(52,211,153,0.2); }
+.ep-suggest .eval-panel-title { color: #34D399; }
+.ep-suggest .eval-panel-body { color: var(--text2); }
 
-.next-btn { width: 100%; padding: 12px; border-radius: 8px; background: #0F6E56; color: #E1F5EE; border: none; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity 0.2s; }
-.next-btn:hover { opacity: 0.88; }
-.next-btn:disabled { opacity: 0.45; }
-.next-btn.finish { background: #534AB7; }
+/* ── RESULTS SCREEN ── */
+.results-hero {
+  text-align: center;
+  padding: 2.5rem 1rem 2rem;
+  position: relative;
+}
+.results-trophy-ring {
+  width: 90px; height: 90px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(124,111,247,0.15), rgba(16,185,129,0.15));
+  border: 2px solid rgba(167,139,250,0.3);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 1.25rem;
+  font-size: 38px;
+  box-shadow: 0 0 40px rgba(124,111,247,0.2);
+  animation: trophyPop 0.6s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes trophyPop {
+  from { transform: scale(0.3); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.results-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px; font-weight: 700;
+  color: var(--text); margin-bottom: 6px; letter-spacing: -0.02em;
+}
+.results-sub { font-size: 14px; color: var(--text2); }
 
-.results-hero { text-align: center; padding: 2rem 1rem 1.5rem; }
-.results-avatar { width: 72px; height: 72px; border-radius: 50%; background: #EEEDFE; border: 2px solid #AFA9EC; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; font-size: 32px; }
-.results-title { font-size: 20px; font-weight: 600; color: #0f172a; margin-bottom: 4px; }
-.results-sub { font-size: 14px; color: #64748b; }
+.metrics-row {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 10px; margin-bottom: 1.5rem;
+}
+.metric-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1.1rem;
+  text-align: center;
+  backdrop-filter: blur(8px);
+  transition: border-color var(--transition);
+}
+.metric-box:hover { border-color: rgba(124,111,247,0.4); }
+.metric-val {
+  font-family: 'Syne', sans-serif;
+  font-size: 26px; font-weight: 800;
+  color: var(--text); margin-bottom: 3px;
+  background: linear-gradient(135deg, var(--text), var(--text2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.metric-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: .07em; color: var(--text3); font-weight: 600; }
 
-.metrics-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.5rem; }
-.metric-box { background: #f8fafc; border-radius: 10px; padding: 1rem; text-align: center; border: 1px solid #e2e8f0; }
-.metric-val { font-size: 24px; font-weight: 700; color: #0f172a; }
-.metric-lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: #94a3b8; margin-top: 3px; font-weight: 600; }
-
-.perf-section { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1rem; }
-.perf-title { font-size: 13px; font-weight: 600; color: #0f172a; margin-bottom: 1rem; }
-.perf-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.perf-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1rem;
+  backdrop-filter: blur(8px);
+}
+.perf-title {
+  font-size: 12px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .07em; color: var(--text3);
+  margin-bottom: 1rem;
+}
+.perf-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
 .perf-row:last-child { margin-bottom: 0; }
-.perf-label { font-size: 12px; color: #64748b; width: 24px; flex-shrink: 0; font-weight: 500; }
-.perf-bar-bg { flex: 1; height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden; }
-.perf-bar-fg { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
-.perf-score { font-size: 12px; font-weight: 600; color: #0f172a; width: 30px; text-align: right; flex-shrink: 0; }
+.perf-label { font-size: 11px; color: var(--text3); width: 22px; flex-shrink: 0; font-weight: 700; font-family: 'Syne', sans-serif; }
+.perf-bar-bg { flex: 1; height: 7px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.perf-bar-fg { height: 100%; border-radius: 4px; transition: width 1s cubic-bezier(0.4,0,0.2,1); }
+.perf-score { font-size: 12px; font-weight: 700; color: var(--text); width: 30px; text-align: right; flex-shrink: 0; font-family: 'Syne', sans-serif; }
 
 .hist-list { display: flex; flex-direction: column; gap: .75rem; margin-bottom: 1.5rem; }
-.hist-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
-.hist-top { display: flex; align-items: center; justify-content: space-between; padding: .75rem 1.25rem; background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
-.hist-q-num { font-size: 12px; font-weight: 600; color: #64748b; }
-.hist-badge { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; border: 1px solid; }
+.hist-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+.hist-card:hover { border-color: rgba(124,111,247,0.3); box-shadow: var(--shadow); }
+.hist-top {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .75rem 1.25rem;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+}
+.hist-q-num { font-size: 11px; font-weight: 700; color: var(--text3); font-family: 'Syne', sans-serif; text-transform: uppercase; letter-spacing: .05em; }
+.hist-badge {
+  font-size: 10px; font-weight: 700; padding: 3px 10px;
+  border-radius: 20px; border: 1px solid;
+}
 .hist-body { padding: 1rem 1.25rem; }
-.hist-q-text { font-size: 13px; font-weight: 600; color: #0f172a; margin-bottom: .5rem; }
-.hist-ans { font-size: 12px; color: #64748b; line-height: 1.55; padding: .75rem; background: #f8fafc; border-radius: 8px; margin-bottom: .75rem; }
+.hist-q-text { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: .5rem; line-height: 1.55; }
+.hist-ans {
+  font-size: 12px; color: var(--text2); line-height: 1.6;
+  padding: .7rem .9rem;
+  background: var(--bg3);
+  border-radius: var(--radius-xs);
+  margin-bottom: .75rem;
+  border: 1px solid var(--border2);
+}
 .hist-chips { display: flex; gap: 6px; flex-wrap: wrap; }
-.hist-chip { font-size: 11px; padding: 3px 9px; border-radius: 20px; border: 1px solid; }
-.hist-chip-fb { background: #EEEDFE; color: #3C3489; border-color: #AFA9EC; }
-.hist-chip-sg { background: #E1F5EE; color: #085041; border-color: #5DCAA5; }
+.hist-chip { font-size: 10px; padding: 3px 10px; border-radius: 20px; border: 1px solid; line-height: 1.5; }
+.hist-chip-fb { background: rgba(124,111,247,0.08); color: #A78BFA; border-color: rgba(167,139,250,0.2); }
+.hist-chip-sg { background: rgba(16,185,129,0.08); color: #34D399; border-color: rgba(52,211,153,0.2); }
 
-.restart-btn { width: 100%; padding: 13px; border-radius: 10px; background: #534AB7; color: #EEEDFE; border: none; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity 0.2s; }
-.restart-btn:hover { opacity: 0.88; }
+.results-actions { display: flex; gap: 10px; }
+.results-actions .primary-btn { flex: 1; }
 
-.spinner { width: 15px; height: 15px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; }
+/* ── SPINNER ── */
+.spinner {
+  width: 15px; height: 15px;
+  border: 2px solid rgba(255,255,255,0.25);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block; flex-shrink: 0;
+}
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── LOADING OVERLAY ── */
+.loading-overlay {
+  position: fixed; inset: 0;
+  background: var(--bg);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 16px;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.loading-pulse {
+  width: 64px; height: 64px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #7C6FF7, #A78BFA);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px;
+  animation: pulse 1.5s ease-in-out infinite;
+  box-shadow: 0 0 0 0 rgba(124,111,247,0.5);
+}
+@keyframes pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(124,111,247,0.5); transform: scale(1); }
+  50% { box-shadow: 0 0 0 16px rgba(124,111,247,0); transform: scale(1.05); }
+}
+.loading-text { font-size: 14px; color: var(--text2); font-weight: 500; }
+.loading-dots::after {
+  content: '';
+  animation: dots 1.5s steps(3, end) infinite;
+}
+@keyframes dots {
+  0% { content: ''; }
+  33% { content: '.'; }
+  66% { content: '..'; }
+  100% { content: '...'; }
+}
+
+/* ── ENTER ANIMATION ── */
+.fade-up { animation: slideUp 0.5s cubic-bezier(0.34,1.56,0.64,1) both; }
+.fade-up-d1 { animation-delay: 0.05s; }
+.fade-up-d2 { animation-delay: 0.1s; }
+.fade-up-d3 { animation-delay: 0.15s; }
+.fade-up-d4 { animation-delay: 0.2s; }
+
+/* ── RESPONSIVE MOBILE ── */
+@media (max-width: 640px) {
+  .page { padding: 0 1rem 5rem; }
+  .header { padding: 1rem 0 .85rem; margin-bottom: 1.25rem; }
+  .brand-name { font-size: 15px; }
+  .ai-badge { display: none; }
+  .role-grid { grid-template-columns: repeat(2, 1fr); gap: 7px; }
+  .setup-row { grid-template-columns: 1fr; }
+  .eval-panels { grid-template-columns: 1fr; }
+  .metrics-row { gap: 7px; }
+  .metric-val { font-size: 22px; }
+  .results-actions { flex-direction: column; }
+  .step-label { display: none; }
+  .step-dot { width: 26px; height: 26px; font-size: 10px; }
+  .q-text { font-size: 14px; }
+  .results-title { font-size: 18px; }
+}
+@media (max-width: 380px) {
+  .role-grid { grid-template-columns: 1fr 1fr; }
+  .diff-grid { grid-template-columns: repeat(3, 1fr); }
+}
 `;
 
 // ─── SCORE RING ───────────────────────────────────────────────────────────────
 
-function ScoreRing({ score, color }) {
+function ScoreRing({ score, color, isDark }) {
   const r = 28, circ = 2 * Math.PI * r;
   const offset = circ - (circ * score) / 10;
+  const textFill = isDark ? "#F0F4FF" : "#0F172A";
+  const trackFill = isDark ? "rgba(255,255,255,0.06)" : "#E2E8F0";
   return (
-    <svg width="72" height="72" viewBox="0 0 72 72">
-      <circle cx="36" cy="36" r={r} fill="none" stroke="#e2e8f0" strokeWidth="5" />
+    <svg width="76" height="76" viewBox="0 0 72 72">
+      <circle cx="36" cy="36" r={r} fill="none" stroke={trackFill} strokeWidth="5" />
       <circle cx="36" cy="36" r={r} fill="none" stroke={color} strokeWidth="5"
         strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={offset}
-        transform="rotate(-90 36 36)" style={{ transition: "stroke-dashoffset 0.8s ease" }} />
-      <text x="36" y="33" textAnchor="middle" fontSize="20" fontWeight="600" fill="#0f172a">{score}</text>
-      <text x="36" y="46" textAnchor="middle" fontSize="10" fill="#94a3b8">/ 10</text>
+        transform="rotate(-90 36 36)"
+        style={{ transition: "stroke-dashoffset 1s cubic-bezier(0.4,0,0.2,1)", filter: `drop-shadow(0 0 6px ${color})` }} />
+      <text x="36" y="32" textAnchor="middle" fontSize="20" fontWeight="700" fill={textFill} fontFamily="Syne,sans-serif">{score}</text>
+      <text x="36" y="46" textAnchor="middle" fontSize="10" fill="#64748B">/ 10</text>
     </svg>
   );
 }
@@ -404,18 +949,22 @@ function ScoreRing({ score, color }) {
 // ─── STEP TRACK ───────────────────────────────────────────────────────────────
 
 function StepTrack({ step }) {
+  const steps = ["Setup", "Interview", "Results"];
   return (
     <div className="step-track">
-      {["Setup", "Interview", "Results"].map((label, i) => {
-        const n = i + 1;
-        const isDone = step > n, isActive = step === n;
+      {steps.map((label, i) => {
+        const n = i + 1, isDone = step > n, isActive = step === n;
         return (
           <div key={n} style={{ display: "flex", alignItems: "center", flex: n < 3 ? 1 : 0 }}>
             <div className={`step-dot${isDone ? " done" : isActive ? " active" : ""}`}>
               {isDone ? "✓" : n}
             </div>
-            <span className={`step-label${isActive ? " active" : ""}`} style={{ marginLeft: 6 }}>{label}</span>
-            {n < 3 && <div className={`step-line${isDone ? " done" : ""}`} style={{ flex: 1 }} />}
+            <span className={`step-label${isDone ? " done" : isActive ? " active" : ""}`} style={{ marginLeft: 7 }}>{label}</span>
+            {n < 3 && (
+              <div className="step-connector" style={{ flex: 1 }}>
+                <div className="step-connector-fill" style={{ width: isDone ? "100%" : "0%" }} />
+              </div>
+            )}
           </div>
         );
       })}
@@ -423,70 +972,53 @@ function StepTrack({ step }) {
   );
 }
 
-// ─── WAVEFORM ANIMATION ───────────────────────────────────────────────────────
-// 12 bars that animate randomly while listening
+// ─── WAVEFORM ─────────────────────────────────────────────────────────────────
 
-const NUM_BARS = 14;
-
+const NUM_BARS = 16;
 function VoiceWaveform({ isListening }) {
-  const [heights, setHeights] = useState(() => Array(NUM_BARS).fill(4));
+  const [heights, setHeights] = useState(() => Array(NUM_BARS).fill(3));
   const animRef = useRef(null);
-
   useEffect(() => {
     if (isListening) {
       const animate = () => {
-        setHeights(
-          Array(NUM_BARS).fill(0).map((_, i) => {
-            const base = 4;
-            const peak = i % 2 === 0 ? 28 : 20;
-            return base + Math.random() * (peak - base);
-          })
-        );
-        animRef.current = setTimeout(animate, 110);
+        setHeights(Array(NUM_BARS).fill(0).map((_, i) => {
+          const base = 3;
+          const peak = i % 2 === 0 ? 26 : 18;
+          return base + Math.random() * (peak - base);
+        }));
+        animRef.current = setTimeout(animate, 100);
       };
       animate();
     } else {
       if (animRef.current) clearTimeout(animRef.current);
-      setHeights(Array(NUM_BARS).fill(4));
+      setHeights(Array(NUM_BARS).fill(3));
     }
     return () => { if (animRef.current) clearTimeout(animRef.current); };
   }, [isListening]);
-
   return (
     <div className="voice-waveform">
       {heights.map((h, i) => (
-        <div
-          key={i}
-          className={`waveform-bar${isListening ? " active" : ""}`}
-          style={{ height: h }}
-        />
+        <div key={i} className={`waveform-bar${isListening ? " active" : ""}`} style={{ height: h }} />
       ))}
     </div>
   );
 }
 
-// ─── VOICE PANEL COMPONENT ────────────────────────────────────────────────────
+// ─── VOICE PANEL ─────────────────────────────────────────────────────────────
 
 function VoicePanel({ answer, setAnswer, disabled }) {
-  // ── State
   const [isListening, setIsListening] = useState(false);
   const [voiceError, setVoiceError] = useState(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
-
-  // ── Refs
   const recognitionRef = useRef(null);
   const timerRef = useRef(null);
-  const accumulatedRef = useRef(""); // text built up before current interim
+  const accumulatedRef = useRef("");
   const startTimeRef = useRef(null);
 
-  // ── Browser support check
-  const SpeechRecognition =
-    typeof window !== "undefined"
-      ? window.SpeechRecognition || window.webkitSpeechRecognition
-      : null;
+  const SpeechRecognition = typeof window !== "undefined"
+    ? window.SpeechRecognition || window.webkitSpeechRecognition : null;
   const isSupported = !!SpeechRecognition;
 
-  // ── Timer management
   const startTimer = useCallback(() => {
     startTimeRef.current = Date.now() - elapsedSeconds * 1000;
     timerRef.current = setInterval(() => {
@@ -495,123 +1027,65 @@ function VoicePanel({ answer, setAnswer, disabled }) {
   }, [elapsedSeconds]);
 
   const stopTimer = useCallback(() => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
   }, []);
 
-  // ── Stop recognition (exposed so parent can call via prop too)
   const stopListening = useCallback(() => {
-    if (recognitionRef.current) {
-      try { recognitionRef.current.stop(); } catch (_) {}
-    }
+    if (recognitionRef.current) { try { recognitionRef.current.stop(); } catch (_) {} }
     stopTimer();
     setIsListening(false);
   }, [stopTimer]);
 
-  // ── Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      stopListening();
-    };
-  }, [stopListening]);
+  useEffect(() => () => stopListening(), [stopListening]);
+  useEffect(() => { if (disabled && isListening) stopListening(); }, [disabled, isListening, stopListening]);
 
-  // ── When disabled (answer submitted), stop automatically
-  useEffect(() => {
-    if (disabled && isListening) {
-      stopListening();
-    }
-  }, [disabled, isListening, stopListening]);
-
-  // ── Start listening
   const startListening = useCallback(() => {
-    if (!isSupported) {
-      setVoiceError("Your browser doesn't support speech recognition. Try Chrome or Edge.");
-      return;
-    }
+    if (!isSupported) { setVoiceError("Your browser doesn't support speech recognition. Try Chrome or Edge."); return; }
     setVoiceError(null);
-
-    // snapshot the existing answer text so we can append to it
     accumulatedRef.current = answer;
-
     try {
       const recognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = true;
       recognition.lang = "en-US";
       recognition.maxAlternatives = 1;
-
       recognition.onstart = () => {
-        setIsListening(true);
-        setElapsedSeconds(0);
-        startTimeRef.current = Date.now();
-        startTimer();
+        setIsListening(true); setElapsedSeconds(0);
+        startTimeRef.current = Date.now(); startTimer();
       };
-
       recognition.onresult = (event) => {
-        let interimTranscript = "";
-        let finalTranscript = "";
-
+        let interimTranscript = "", finalTranscript = "";
         for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
-          if (event.results[i].isFinal) {
-            finalTranscript += transcript + " ";
-          } else {
-            interimTranscript += transcript;
-          }
+          const t = event.results[i][0].transcript;
+          if (event.results[i].isFinal) finalTranscript += t + " ";
+          else interimTranscript += t;
         }
-
         if (finalTranscript) {
           accumulatedRef.current = (accumulatedRef.current + " " + finalTranscript).trimStart();
           setAnswer(accumulatedRef.current);
         } else if (interimTranscript) {
-          // Show live preview: accumulated + current interim
-          const preview = (accumulatedRef.current + " " + interimTranscript).trimStart();
-          setAnswer(preview);
+          setAnswer((accumulatedRef.current + " " + interimTranscript).trimStart());
         }
       };
-
       recognition.onerror = (event) => {
-        stopTimer();
-        setIsListening(false);
-        switch (event.error) {
-          case "not-allowed":
-          case "permission-denied":
-            setVoiceError("Microphone access denied. Please allow microphone permission in your browser.");
-            break;
-          case "no-speech":
-            setVoiceError("No speech detected. Please speak clearly and try again.");
-            break;
-          case "audio-capture":
-            setVoiceError("No microphone found. Please connect a microphone and try again.");
-            break;
-          case "network":
-            setVoiceError("Network error. Speech recognition requires an internet connection.");
-            break;
-          case "aborted":
-            // intentional stop, no error to show
-            break;
-          default:
-            setVoiceError(`Speech recognition error: ${event.error}. Please try again.`);
-        }
+        stopTimer(); setIsListening(false);
+        const msgs = {
+          "not-allowed": "Microphone access denied. Please allow microphone permission.",
+          "permission-denied": "Microphone access denied.",
+          "no-speech": "No speech detected. Please speak clearly.",
+          "audio-capture": "No microphone found. Please connect one.",
+          "network": "Network error. Speech recognition requires internet.",
+          "aborted": null,
+        };
+        const msg = msgs[event.error] ?? `Speech recognition error: ${event.error}`;
+        if (msg) setVoiceError(msg);
       };
-
-      recognition.onend = () => {
-        stopTimer();
-        setIsListening(false);
-        // If still has content in interim, finalise it
-        if (recognitionRef.current) {
-          recognitionRef.current = null;
-        }
-      };
-
+      recognition.onend = () => { stopTimer(); setIsListening(false); recognitionRef.current = null; };
       recognitionRef.current = recognition;
       recognition.start();
     } catch (err) {
       setVoiceError("Failed to start speech recognition. Please refresh and try again.");
-      setIsListening(false);
-      stopTimer();
+      setIsListening(false); stopTimer();
     }
   }, [isSupported, SpeechRecognition, answer, setAnswer, startTimer, stopTimer]);
 
@@ -623,96 +1097,50 @@ function VoicePanel({ answer, setAnswer, disabled }) {
     return "Click Start to answer by voice";
   };
 
-  const statusClass = () => {
-    if (voiceError) return "error-txt";
-    if (isListening) return "active";
-    return "";
-  };
-
-  const dotClass = () => {
-    if (voiceError) return "error";
-    if (isListening) return "listening";
-    return "idle";
-  };
-
   return (
     <div className="voice-panel">
-      {/* Header */}
       <div className="voice-panel-header">
-        <span className="voice-panel-title">
-          🎤 Voice answer
-        </span>
+        <span className="voice-panel-title">🎤 Voice Answer</span>
         <span className={`voice-support-badge ${isSupported ? "supported" : "unsupported"}`}>
           {isSupported ? "✓ Supported" : "✗ Unsupported"}
         </span>
       </div>
-
       <div className="voice-body">
-        {/* Controls row */}
         <div className="voice-controls">
-          <button
-            className="voice-btn voice-btn-start"
-            onClick={startListening}
-            disabled={!isSupported || isListening || disabled}
-            title="Start voice recognition"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-              <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-              <line x1="12" y1="19" x2="12" y2="23" />
-              <line x1="8" y1="23" x2="16" y2="23" />
+          <button className="voice-btn voice-btn-start" onClick={startListening}
+            disabled={!isSupported || isListening || disabled}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/>
+              <line x1="8" y1="23" x2="16" y2="23"/>
             </svg>
             Start
           </button>
-
-          <button
-            className="voice-btn voice-btn-stop"
-            onClick={stopListening}
-            disabled={!isListening}
-            title="Stop voice recognition"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-              <rect x="3" y="3" width="18" height="18" rx="3" />
+          <button className="voice-btn voice-btn-stop" onClick={stopListening} disabled={!isListening}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="3" y="3" width="18" height="18" rx="3"/>
             </svg>
             Stop
           </button>
-
           <div className="voice-status">
-            <div className={`voice-status-dot ${dotClass()}`} />
-            <span className={`voice-status-text ${statusClass()}`}>
+            <div className={`voice-status-dot ${voiceError ? "error" : isListening ? "listening" : "idle"}`} />
+            <span className={`voice-status-text ${voiceError ? "error-txt" : isListening ? "active" : ""}`}>
               {statusText()}
             </span>
           </div>
         </div>
-
-        {/* Waveform */}
         <VoiceWaveform isListening={isListening} />
-
-        {/* Error bar */}
         {voiceError && (
           <div className="voice-error-bar">
             <span>⚠️ {voiceError}</span>
             <button onClick={() => setVoiceError(null)}>✕</button>
           </div>
         )}
-
-        {/* Meta row: timer + char count */}
         <div className="voice-meta">
           <span className={`voice-timer${isListening ? " active" : ""}`}>
-            {isListening ? (
-              <>
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
-                  <circle cx="12" cy="12" r="10" />
-                </svg>
-                {formatTime(elapsedSeconds)}
-              </>
-            ) : (
-              <>⏱ {formatTime(elapsedSeconds)}</>
-            )}
+            {isListening ? <><svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" style={{ marginTop: 1 }}><circle cx="12" cy="12" r="10"/></svg> {formatTime(elapsedSeconds)}</> : <>⏱ {formatTime(elapsedSeconds)}</>}
           </span>
-          <span className={`voice-char-count${answer.length > 0 ? " has-content" : ""}`}>
-            {answer.length} characters
-          </span>
+          <span className={`voice-char-count${answer.length > 0 ? " has-content" : ""}`}>{answer.length} chars</span>
         </div>
       </div>
     </div>
@@ -722,10 +1150,11 @@ function VoicePanel({ answer, setAnswer, disabled }) {
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 
 export default function App() {
+  const [isDark, setIsDark] = useState(true);
   const [screen, setScreen] = useState("setup");
   const [role, setRole] = useState("Python Developer");
   const [customRole, setCustomRole] = useState("");
-  const [difficulty, setDifficulty] = useState("easy");
+  const [difficulty, setDifficulty] = useState("medium");
   const [resumeFile, setResumeFile] = useState(null);
   const [resumeText, setResumeText] = useState("");
   const [question, setQuestion] = useState("");
@@ -739,20 +1168,24 @@ export default function App() {
   const [submitting, setSubmitting] = useState(false);
   const [nextLoading, setNextLoading] = useState(false);
 
+  const theme = isDark ? DARK : LIGHT;
   const effectiveRole = role === "custom" ? (customRole || "Custom Role") : role;
   const step = screen === "setup" ? 1 : screen === "question" ? 2 : 3;
   const tip = TIPS[(questionNumber - 1) % TIPS.length];
-  const qTypeIdx = Q_TYPES.indexOf(qType);
-  const qColor = Q_COLORS[qTypeIdx >= 0 ? qTypeIdx : 0];
+  const qColor = Q_TYPE_COLORS[qType] || Q_TYPE_COLORS["Technical"];
+  const selectedRoleObj = ROLES.find(r => r.id === role) || ROLES[0];
+
+  // Apply theme CSS vars
+  useEffect(() => {
+    const root = document.documentElement;
+    Object.entries(theme).forEach(([k, v]) => root.style.setProperty(k, v));
+  }, [isDark]);
 
   const uploadResume = async () => {
     if (!resumeFile) return "";
     try {
       const fd = new FormData(); fd.append("file", resumeFile);
-      const r = await fetch(`${API_URL}/upload-resume`, {
-  method: "POST",
-  body: fd
-});
+      const r = await fetch(`${API_URL}/upload-resume`, { method: "POST", body: fd });
       const d = await r.json();
       if (d.resume_text) { setResumeText(d.resume_text); return d.resume_text; }
     } catch (e) { console.error(e); }
@@ -811,280 +1244,346 @@ export default function App() {
   };
 
   const restart = () => {
-    setScreen("setup"); setRole("Python Developer"); setCustomRole(""); setDifficulty("easy");
+    setScreen("setup"); setRole("Python Developer"); setCustomRole(""); setDifficulty("medium");
     setResumeFile(null); setResumeText(""); setQuestion(""); setAnswer(""); setResult(null);
     setQuestionNumber(1); setScores([]); setHistory([]);
   };
 
   const downloadReport = async () => {
-  try {
-    const response = await fetch(
-      `${API_URL}/generate-report`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          role: effectiveRole,
-          average_score: avg,
-          history: history,
-        }),
-      }
-    );
-
-    const blob = await response.blob();
-
-    const url = window.URL.createObjectURL(blob);
-
-    const link = document.createElement("a");
-
-    link.href = url;
-    link.download = "InterviewAce_Report.pdf";
-
-    document.body.appendChild(link);
-
-    link.click();
-
-    link.remove();
-  } catch (error) {
-    console.error(error);
-  }
-};
+    try {
+      const response = await fetch(`${API_URL}/generate-report`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: effectiveRole, average_score: avg, history }),
+      });
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url; link.download = "InterviewAce_Report.pdf";
+      document.body.appendChild(link); link.click(); link.remove();
+    } catch (error) { console.error(error); }
+  };
 
   const avg = scores.length ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) : "—";
   const best = scores.length ? Math.max(...scores) : "—";
   const overallGrade = scores.length ? scoreGrade(parseFloat(avg)) : null;
 
+  const diffColors = { easy: "#10B981", medium: "#F59E0B", hard: "#EF4444" };
+
   return (
     <>
       <style>{css}</style>
-      <div className="page">
-        {/* ── HEADER ── */}
-        <div className="header">
-          <div className="brand">
-            <div className="brand-icon">🎙</div>
-            <div>
-              <div className="brand-name">InterviewAce AI</div>
-              <div className="brand-sub">Professional interview coach</div>
+
+      {/* Ambient glow */}
+      <div className="ambient-glow ambient-1" />
+      <div className="ambient-glow ambient-2" />
+
+      {/* Loading overlay */}
+      {loading && (
+        <div className="loading-overlay">
+          <div className="loading-pulse">🎙</div>
+          <div className="loading-text">Preparing your interview<span className="loading-dots" /></div>
+        </div>
+      )}
+
+      <div className="app-shell">
+        <div className="page">
+
+          {/* ── HEADER ── */}
+          <div className="header">
+            <div className="brand">
+              <div className="brand-logo">🎙</div>
+              <div>
+                <div className="brand-name">InterviewAce AI</div>
+                <div className="brand-sub">AI-powered interview coach</div>
+              </div>
+            </div>
+            <div className="header-right">
+              <span className="ai-badge">✦ AI-powered</span>
+              <button className="theme-toggle" onClick={() => setIsDark(d => !d)} title="Toggle theme">
+                {isDark ? "☀️" : "🌙"}
+              </button>
             </div>
           </div>
-          <span className="ai-badge">✦ AI-powered</span>
-        </div>
 
-        <StepTrack step={step} />
+          <StepTrack step={step} />
 
-        {/* ── SETUP ── */}
-        {screen === "setup" && (
-          <>
-            <div className="setup-grid">
-              <div className="field-card full">
-                <div className="field-label">🎯 Target role</div>
-                <div className="role-grid">
-                  {ROLES.map(r => (
-                    <div key={r.id} className={`role-card${role === r.id ? " selected" : ""}`} onClick={() => setRole(r.id)}>
-                      <div className="role-icon-box" style={{ background: r.color.bg }}><span>{r.icon}</span></div>
-                      <div><div className="role-name">{r.label}</div><div className="role-desc">{r.desc}</div></div>
+          {/* ─────────────────── SETUP ─────────────────── */}
+          {screen === "setup" && (
+            <div className="fade-up">
+              <div className="setup-grid">
+
+                {/* Role selector */}
+                <div className="card fade-up fade-up-d1">
+                  <div className="card-inner">
+                    <div className="section-label">
+                      <div className="section-label-dot" />
+                      Target role
                     </div>
-                  ))}
-                </div>
-                {role === "custom" && (
-                  <div className="custom-input">
-                    <input value={customRole} onChange={e => setCustomRole(e.target.value)} placeholder="e.g. DevOps Engineer, Product Manager…" />
+                    <div className="role-grid">
+                      {ROLES.map(r => (
+                        <div
+                          key={r.id}
+                          className={`role-card${role === r.id ? " selected" : ""}`}
+                          style={{ "--role-accent": r.accent, "--role-accent-bg": r.accent + "20" }}
+                          onClick={() => setRole(r.id)}
+                        >
+                          <div className="role-icon-box">{r.icon}</div>
+                          <div className="role-text">
+                            <div className="role-name">{r.label}</div>
+                            <div className="role-desc">{r.desc}</div>
+                          </div>
+                          {role === r.id && (
+                            <div style={{ marginLeft: "auto", width: 7, height: 7, borderRadius: "50%", background: r.accent, flexShrink: 0, boxShadow: `0 0 6px ${r.accent}` }} />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    {role === "custom" && (
+                      <div className="custom-input">
+                        <input value={customRole} onChange={e => setCustomRole(e.target.value)}
+                          placeholder="e.g. DevOps Engineer, Product Manager…" />
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-
-              <div className="field-card">
-                <div className="field-label">📈 Difficulty</div>
-                <div className="diff-grid">
-                  {DIFFICULTIES.map(d => (
-                    <button key={d.id} className={`diff-btn${difficulty === d.id ? ` active-${d.id}` : ""}`} onClick={() => setDifficulty(d.id)}>
-                      <span>{d.icon}</span>{d.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="field-card">
-                <div className="field-label">📄 Resume</div>
-                <div className={`file-drop${resumeFile ? " has-file" : ""}`} onClick={() => document.getElementById("file-inp").click()}>
-                  <div className="fd-icon">{resumeFile ? "✅" : "📤"}</div>
-                  <p>{resumeFile ? "Resume uploaded" : "Upload PDF resume (optional)"}</p>
-                  {resumeFile && <div className="file-chip">✓ {resumeFile.name}</div>}
-                </div>
-                <input id="file-inp" type="file" accept=".pdf" style={{ display: "none" }} onChange={e => setResumeFile(e.target.files[0])} />
-              </div>
-            </div>
-
-            <div className="tips-bar">
-              <span className="tips-bar-icon">💡</span>
-              <p>Upload your resume for personalised questions based on your experience. Otherwise you'll get general role-based questions. All 5 questions are evaluated in real time by AI.</p>
-            </div>
-
-            <button className="start-btn" onClick={startInterview} disabled={loading}>
-              {loading ? <><span className="spinner" /> Preparing your interview…</> : <>▶ Start interview — {effectiveRole}</>}
-            </button>
-          </>
-        )}
-
-        {/* ── QUESTION ── */}
-        {screen === "question" && (
-          <>
-            <div className="q-header">
-              <span className="q-counter">Question {questionNumber} of 5</span>
-              <span className="q-role-tag">{effectiveRole}</span>
-            </div>
-            <div className="prog-wrap">
-              <div className="prog-bar"><div className="prog-fill" style={{ width: `${(questionNumber / 5) * 100}%` }} /></div>
-              <div className="prog-labels"><span>{questionNumber - 1} done</span><span>{5 - questionNumber + 1} remaining</span></div>
-            </div>
-
-            <div className="q-card">
-              <div className="q-card-top">
-                <span className="q-type-badge" style={{ background: qColor.bg, color: qColor.text, borderColor: qColor.border }}>{qType}</span>
-                <p className="q-text">{question || "Generating your question…"}</p>
-              </div>
-              <div className="q-card-body">
-                {/* Answer label with live char count */}
-                <div className="ans-label">
-                  Your answer
-                  <span className="char-count">{answer.length} characters</span>
                 </div>
 
-                {/* Textarea — also updated by voice */}
-                <textarea
-                  value={answer}
-                  onChange={e => setAnswer(e.target.value)}
-                  disabled={!!result}
-                  className={undefined /* voice border handled below */}
-                  style={!!result ? {} : undefined}
-                  placeholder="Write a clear, structured answer, or use the voice panel below to speak your answer…"
-                />
-
-                {/* ── VOICE PANEL ── inserted directly below textarea */}
-                {!result && (
-                  <VoicePanel
-                    answer={answer}
-                    setAnswer={setAnswer}
-                    disabled={!!result || submitting}
-                  />
-                )}
-
-                <div className="tip-row">
-                  <span style={{ fontSize: 14 }}>💬</span>
-                  <span>Tip: {tip}</span>
-                </div>
-
-                {!result && (
-                  <button className="submit-btn" onClick={submitAnswer} disabled={submitting}>
-                    {submitting ? <><span className="spinner" /> Evaluating…</> : <>↑ Submit answer</>}
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {result && (() => {
-              const sc = parseInt(result.score);
-              const g = scoreGrade(sc);
-              return (
-                <div>
-                  <div className="eval-score-header">
-                    <div className="score-circle"><ScoreRing score={sc} color={g.main} /></div>
-                    <div className="score-meta">
-                      <div className="score-grade-label">{g.label}</div>
-                      <div className="score-grade-sub">{g.sub}</div>
-                      <div className="score-bar-bg"><div className="score-bar-fill" style={{ width: `${sc * 10}%`, background: g.main }} /></div>
-                    </div>
-                  </div>
-                  <div className="eval-panels">
-                    <div className="eval-panel ep-feedback">
-                      <div className="eval-panel-head"><span className="eval-panel-icon">💬</span><span className="eval-panel-title">Feedback</span></div>
-                      <div className="eval-panel-body">{result.feedback}</div>
-                    </div>
-                    <div className="eval-panel ep-suggest">
-                      <div className="eval-panel-head"><span className="eval-panel-icon">💡</span><span className="eval-panel-title">Suggestion</span></div>
-                      <div className="eval-panel-body">{result.suggestion}</div>
-                    </div>
-                  </div>
-                  <button className={`next-btn${questionNumber >= 5 ? " finish" : ""}`} onClick={nextQuestion} disabled={nextLoading}>
-                    {nextLoading ? <><span className="spinner" /> Loading…</> : questionNumber >= 5 ? <>🏆 View results</> : <>→ Next question</>}
-                  </button>
-                </div>
-              );
-            })()}
-          </>
-        )}
-
-        {/* ── RESULTS ── */}
-        {screen === "results" && (
-          <>
-            <div className="results-hero">
-              <div className="results-avatar">🏆</div>
-              <div className="results-title">Interview complete — {effectiveRole}</div>
-              <div className="results-sub">You scored {avg}/10 on average. {overallGrade?.sub}.</div>
-            </div>
-            <div className="metrics-row">
-              <div className="metric-box"><div className="metric-val">{avg}{scores.length ? "/10" : ""}</div><div className="metric-lbl">Avg score</div></div>
-              <div className="metric-box"><div className="metric-val">{best}{scores.length ? "/10" : ""}</div><div className="metric-lbl">Best score</div></div>
-              <div className="metric-box"><div className="metric-val">{overallGrade?.label || "—"}</div><div className="metric-lbl">Grade</div></div>
-            </div>
-            <div className="perf-section">
-              <div className="perf-title">Score per question</div>
-              {scores.map((sc, i) => {
-                const g = scoreGrade(sc);
-                return (
-                  <div key={i} className="perf-row">
-                    <span className="perf-label">Q{i + 1}</span>
-                    <div className="perf-bar-bg"><div className="perf-bar-fg" style={{ width: `${sc * 10}%`, background: g.main }} /></div>
-                    <span className="perf-score">{sc}</span>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="hist-list">
-              {history.map((item, i) => {
-                const g = scoreGrade(item.score);
-                return (
-                  <div key={i} className="hist-card">
-                    <div className="hist-top">
-                      <span className="hist-q-num">Question {i + 1}</span>
-                      <span className="hist-badge" style={{ background: g.bg, color: g.main, borderColor: g.border }}>{item.score}/10 · {g.label}</span>
-                    </div>
-                    <div className="hist-body">
-                      <p className="hist-q-text">{item.question}</p>
-                      <p className="hist-ans">{item.answer}</p>
-                      <div className="hist-chips">
-                        <span className="hist-chip hist-chip-fb">💬 {item.feedback}</span>
-                        <span className="hist-chip hist-chip-sg">💡 {item.suggestion}</span>
+                {/* Difficulty + Resume in a row */}
+                <div className="setup-row fade-up fade-up-d2">
+                  <div className="card">
+                    <div className="card-inner">
+                      <div className="section-label">
+                        <div className="section-label-dot" />
+                        Difficulty
+                      </div>
+                      <div className="diff-grid">
+                        {DIFFICULTIES.map(d => (
+                          <button
+                            key={d.id}
+                            className={`diff-btn${difficulty === d.id ? " active" : ""}`}
+                            onClick={() => setDifficulty(d.id)}
+                            style={difficulty === d.id ? {
+                              borderColor: d.color,
+                              background: d.color + "15",
+                              color: d.color,
+                            } : {}}
+                          >
+                            <span className="icon">{d.icon}</span>
+                            <div className="label">{d.label}</div>
+                            <div className="desc">{d.desc}</div>
+                          </button>
+                        ))}
                       </div>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-            <div
-  style={{
-    display: "flex",
-    gap: "12px",
-  }}
->
-  <button
-    className="restart-btn"
-    onClick={downloadReport}
-  >
-    📄 Download Report
-  </button>
 
-  <button
-    className="restart-btn"
-    onClick={restart}
-  >
-    ↺ Start New Interview
-  </button>
-</div>
-          </>
-        )}
+                  <div className="card">
+                    <div className="card-inner">
+                      <div className="section-label">
+                        <div className="section-label-dot" />
+                        Resume
+                      </div>
+                      <div className={`file-drop${resumeFile ? " has-file" : ""}`}
+                        onClick={() => document.getElementById("file-inp").click()}>
+                        <div className="fd-icon">{resumeFile ? "✅" : "📤"}</div>
+                        <div className="fd-text">{resumeFile ? "Resume uploaded" : "Upload PDF resume"}</div>
+                        {resumeFile && <div className="file-chip">✓ {resumeFile.name}</div>}
+                      </div>
+                      <input id="file-inp" type="file" accept=".pdf" style={{ display: "none" }}
+                        onChange={e => setResumeFile(e.target.files[0])} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="info-bar fade-up fade-up-d3">
+                <span className="info-bar-icon">💡</span>
+                <p>Upload your resume for personalized questions tailored to your experience. All 5 questions are evaluated in real-time by AI with detailed feedback and suggestions.</p>
+              </div>
+
+              <button className="primary-btn fade-up fade-up-d4" onClick={startInterview} disabled={loading || (role === "custom" && !customRole.trim())}>
+                {loading ? <><span className="spinner" /> Preparing your interview…</> : <>▶ &nbsp;Start Interview — {effectiveRole}</>}
+              </button>
+            </div>
+          )}
+
+          {/* ─────────────────── QUESTION ─────────────────── */}
+          {screen === "question" && (
+            <>
+              <div className="q-header fade-up">
+                <span className="q-counter">Question {questionNumber} <span style={{ color: "var(--text3)", fontWeight: 400 }}>of 5</span></span>
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <span style={{ fontSize: 11, color: diffColors[difficulty], background: diffColors[difficulty] + "18", padding: "3px 10px", borderRadius: 20, border: `1px solid ${diffColors[difficulty]}33`, fontWeight: 600 }}>
+                    {DIFFICULTIES.find(d => d.id === difficulty)?.icon} {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
+                  </span>
+                  <span className="q-role-tag">{effectiveRole}</span>
+                </div>
+              </div>
+
+              <div className="prog-wrap fade-up fade-up-d1">
+                <div className="prog-bar">
+                  <div className="prog-fill" style={{ width: `${(questionNumber / 5) * 100}%` }} />
+                </div>
+                <div className="prog-labels">
+                  <span>{questionNumber - 1} answered</span>
+                  <span>{5 - questionNumber + 1} remaining</span>
+                </div>
+              </div>
+
+              <div className="q-card fade-up fade-up-d2">
+                <div className="q-card-top">
+                  <span className="q-type-badge" style={{ background: qColor.bg, color: qColor.text, borderColor: qColor.border }}>
+                    {qType}
+                  </span>
+                  <p className="q-text">{question || "Generating your question…"}</p>
+                </div>
+                <div className="q-card-body">
+                  <div className="ans-label">
+                    Your answer
+                    <span className={`char-count${answer.length > 1500 ? " warn" : ""}`}>{answer.length} characters</span>
+                  </div>
+                  <textarea
+                    value={answer}
+                    onChange={e => setAnswer(e.target.value)}
+                    disabled={!!result}
+                    className={!result && answer.length > 0 ? undefined : undefined}
+                    placeholder="Write a clear, structured answer, or use the voice panel below to speak your answer…"
+                  />
+                  {!result && <VoicePanel answer={answer} setAnswer={setAnswer} disabled={!!result || submitting} />}
+                  <div className="tip-row">
+                    <span style={{ fontSize: 14, flexShrink: 0 }}>💬</span>
+                    <span>{tip}</span>
+                  </div>
+                  {!result && (
+                    <button className="primary-btn success-btn" style={{ marginTop: ".75rem" }} onClick={submitAnswer} disabled={submitting || !answer.trim()}>
+                      {submitting ? <><span className="spinner" /> Evaluating with AI…</> : <>↑ &nbsp;Submit Answer</>}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {result && (() => {
+                const sc = parseInt(result.score);
+                const g = scoreGrade(sc);
+                return (
+                  <div className="eval-container fade-up">
+                    <div className="eval-score-card">
+                      <div className="score-circle">
+                        <ScoreRing score={sc} color={g.color} isDark={isDark} />
+                      </div>
+                      <div className="score-meta">
+                        <div className="score-grade-label">{g.label}</div>
+                        <div className="score-grade-sub">{g.sub}</div>
+                        <div className="score-bar-bg">
+                          <div className="score-bar-fill" style={{ width: `${sc * 10}%`, background: g.color, boxShadow: `0 0 8px ${g.glow}` }} />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="eval-panels">
+                      <div className="eval-panel ep-feedback">
+                        <div className="eval-panel-head">
+                          <span className="eval-panel-icon">💬</span>
+                          <span className="eval-panel-title">Feedback</span>
+                        </div>
+                        <div className="eval-panel-body">{result.feedback}</div>
+                      </div>
+                      <div className="eval-panel ep-suggest">
+                        <div className="eval-panel-head">
+                          <span className="eval-panel-icon">💡</span>
+                          <span className="eval-panel-title">Suggestion</span>
+                        </div>
+                        <div className="eval-panel-body">{result.suggestion}</div>
+                      </div>
+                    </div>
+                    <button
+                      className={`primary-btn${questionNumber >= 5 ? " finish-btn" : " success-btn"}`}
+                      onClick={nextQuestion} disabled={nextLoading}
+                    >
+                      {nextLoading
+                        ? <><span className="spinner" /> Loading next question…</>
+                        : questionNumber >= 5 ? <>🏆 &nbsp;View Results</> : <>→ &nbsp;Next Question</>}
+                    </button>
+                  </div>
+                );
+              })()}
+            </>
+          )}
+
+          {/* ─────────────────── RESULTS ─────────────────── */}
+          {screen === "results" && (
+            <div className="fade-up">
+              <div className="results-hero">
+                <div className="results-trophy-ring">🏆</div>
+                <div className="results-title">Interview Complete</div>
+                <div className="results-sub">{effectiveRole} · {overallGrade?.label} · {avg}/10 average</div>
+              </div>
+
+              <div className="metrics-row fade-up fade-up-d1">
+                <div className="metric-box">
+                  <div className="metric-val">{avg}{scores.length ? "/10" : ""}</div>
+                  <div className="metric-lbl">Avg Score</div>
+                </div>
+                <div className="metric-box">
+                  <div className="metric-val">{best}{scores.length ? "/10" : ""}</div>
+                  <div className="metric-lbl">Best Score</div>
+                </div>
+                <div className="metric-box">
+                  <div className="metric-val">{overallGrade?.label || "—"}</div>
+                  <div className="metric-lbl">Grade</div>
+                </div>
+              </div>
+
+              <div className="perf-section fade-up fade-up-d2">
+                <div className="perf-title">Score per question</div>
+                {scores.map((sc, i) => {
+                  const g = scoreGrade(sc);
+                  return (
+                    <div key={i} className="perf-row">
+                      <span className="perf-label">Q{i + 1}</span>
+                      <div className="perf-bar-bg">
+                        <div className="perf-bar-fg" style={{ width: `${sc * 10}%`, background: g.color, boxShadow: `0 0 6px ${g.glow}` }} />
+                      </div>
+                      <span className="perf-score" style={{ color: g.color }}>{sc}</span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="hist-list fade-up fade-up-d3">
+                {history.map((item, i) => {
+                  const g = scoreGrade(item.score);
+                  return (
+                    <div key={i} className="hist-card">
+                      <div className="hist-top">
+                        <span className="hist-q-num">Question {i + 1}</span>
+                        <span className="hist-badge" style={{ background: g.color + "18", color: g.color, borderColor: g.color + "33" }}>
+                          {item.score}/10 · {g.label}
+                        </span>
+                      </div>
+                      <div className="hist-body">
+                        <p className="hist-q-text">{item.question}</p>
+                        <p className="hist-ans">{item.answer}</p>
+                        <div className="hist-chips">
+                          <span className="hist-chip hist-chip-fb">💬 {item.feedback}</span>
+                          <span className="hist-chip hist-chip-sg">💡 {item.suggestion}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="results-actions fade-up fade-up-d4">
+                <button className="primary-btn" style={{ background: "linear-gradient(135deg, #1F2937, #374151)", boxShadow: "none", border: "1px solid var(--border)" }} onClick={downloadReport}>
+                  📄 Download Report
+                </button>
+                <button className="primary-btn finish-btn" onClick={restart}>
+                  ↺ &nbsp;New Interview
+                </button>
+              </div>
+            </div>
+          )}
+
+        </div>
       </div>
     </>
   );
