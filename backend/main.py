@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 from PyPDF2 import PdfReader
 import google.generativeai as genai
+import requests
 import os
 import re
 
@@ -25,6 +26,30 @@ genai.configure(
 )
 
 model = genai.GenerativeModel("gemini-2.5-flash")
+
+def ask_llm(prompt):
+
+    response = requests.post(
+        "https://openrouter.ai/api/v1/chat/completions",
+        headers={
+            "Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY')}",
+            "Content-Type": "application/json"
+        },
+        json={
+            "model": "google/gemma-4-31b-it:free",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ]
+        },
+        timeout=60
+    )
+
+    data = response.json()
+
+    return data["choices"][0]["message"]["content"]
 
 # =========================
 # FASTAPI
@@ -129,11 +154,11 @@ Rules:
 
     try:
 
-        response = model.generate_content(prompt)
+        question = ask_llm(prompt)
 
         return {
             "role": data.role,
-            "question": response.text.strip()
+            "question": question.strip()
         }
 
     except Exception as e:
@@ -173,10 +198,10 @@ Rules:
 
     try:
 
-        response = model.generate_content(prompt)
+        question = ask_llm(prompt)
 
         return {
-            "question": response.text.strip()
+            "question": question.strip()
         }
 
     except Exception as e:
@@ -220,9 +245,7 @@ Suggestion: <suggestion>
 
     try:
 
-        response = model.generate_content(prompt)
-
-        evaluation = response.text.strip()
+        evaluation = ask_llm(prompt).strip()
 
         print("GEMINI RESPONSE:")
         print(evaluation)
