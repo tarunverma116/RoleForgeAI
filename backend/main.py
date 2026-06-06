@@ -95,7 +95,7 @@ class ReportRequest(BaseModel):
 @app.get("/")
 def home():
     return {
-        "message": "InterviewAce AI Backend Running 🚀"
+        "message": "RoleForge AI Backend Running 🚀"
     }
 
 
@@ -310,7 +310,7 @@ def generate_report(data: ReportRequest):
 
     content.append(
         Paragraph(
-            "InterviewAce AI Report",
+            "RoleForge AI Report",
             styles["Title"]
         )
     )

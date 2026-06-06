@@ -1258,7 +1258,7 @@ export default function App() {
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
-      link.href = url; link.download = "InterviewAce_Report.pdf";
+      link.href = url; link.download = "RoleForge_Report.pdf";
       document.body.appendChild(link); link.click(); link.remove();
     } catch (error) { console.error(error); }
   };
@@ -1293,7 +1293,7 @@ export default function App() {
             <div className="brand">
               <div className="brand-logo">🎙</div>
               <div>
-                <div className="brand-name">InterviewAce AI</div>
+                <div className="brand-name">RoleForge AI</div>
                 <div className="brand-sub">AI-powered interview coach</div>
               </div>
             </div>
