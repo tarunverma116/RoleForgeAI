@@ -188,9 +188,6 @@ npm run dev
 * Multi-Language Support
 
 ---
-🌐 Live Demo: https://role-forge-ai-kappa.vercel.app
-
-📂 GitHub Repository: https://github.com/tarunverma116/RoleForgeAI
 
 ## 👨‍💻 Author
 
