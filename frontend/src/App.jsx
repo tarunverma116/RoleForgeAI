@@ -1167,6 +1167,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [nextLoading, setNextLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const theme = isDark ? DARK : LIGHT;
   const effectiveRole = role === "custom" ? (customRole || "Custom Role") : role;
@@ -1188,7 +1189,9 @@ export default function App() {
       const r = await fetch(`${API_URL}/upload-resume`, { method: "POST", body: fd });
       const d = await r.json();
       if (d.resume_text) { setResumeText(d.resume_text); return d.resume_text; }
-    } catch (e) { console.error(e); }
+    } catch (e) { console.error(e);
+      setErrorMessage("Server connection failed");
+     }
     return "";
   };
 
@@ -1199,7 +1202,7 @@ export default function App() {
     try {
       const r = await fetch(`${API_URL}${ep}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       const d = await r.json();
-      if (d.error) { alert(d.error); return; }
+      if (d.error) { setErrorMessage(d.error); return; }
       setQuestion(d.question);
       setQType(Q_TYPES[Math.floor(Math.random() * Q_TYPES.length)]);
       setAnswer(""); setResult(null);
@@ -1216,7 +1219,7 @@ export default function App() {
   };
 
   const submitAnswer = async () => {
-    if (!answer.trim()) { alert("Please write or speak an answer first."); return; }
+    if (!answer.trim()) { setErrorMessage("Please write or speak an answer first."); return; }
     setSubmitting(true);
     try {
       const r = await fetch(`${API_URL}/evaluate-answer`, {
@@ -1224,7 +1227,7 @@ export default function App() {
         body: JSON.stringify({ question, answer, difficulty }),
       });
       const d = await r.json();
-      if (d.error) { alert(d.error); setSubmitting(false); return; }
+      if (d.error) { setErrorMessage(d.error); setSubmitting(false); return; }
       const sc = parseInt(d.score);
       if (!isNaN(sc)) {
         setScores(p => [...p, sc]);
@@ -1272,6 +1275,25 @@ export default function App() {
   return (
     <>
       <style>{css}</style>
+    {errorMessage && (
+      <div
+        style={{
+          background: "#dc2626",
+          color: "white",
+          padding: "12px",
+          borderRadius: "10px",
+          margin: "12px",
+          textAlign: "center",
+          cursor: "pointer",
+          position: "sticky",
+          top: "10px",
+          zIndex: 9999
+        }}
+        onClick={() => setErrorMessage("")}
+      >
+        {errorMessage}
+      </div>
+    )}
 
       {/* Ambient glow */}
       <div className="ambient-glow ambient-1" />
