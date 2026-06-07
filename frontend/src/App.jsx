@@ -1164,6 +1164,8 @@ export default function App() {
   const [questionNumber, setQuestionNumber] = useState(1);
   const [scores, setScores] = useState([]);
   const [history, setHistory] = useState([]);
+  const [questions, setQuestions] = useState([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [nextLoading, setNextLoading] = useState(false);
@@ -1195,26 +1197,47 @@ export default function App() {
     return "";
   };
 
-  const generateQuestion = async (resumeData = "") => {
+  // Fetches all 5 questions in ONE API call and stores them in state.
+  const fetchAllQuestions = async (resumeData = "") => {
     const hasR = !!resumeData;
     const ep = hasR ? "/generate-resume-question" : "/generate-question";
-    const body = hasR ? { role: effectiveRole, resume_text: resumeData, difficulty } : { role: effectiveRole, difficulty };
-    try {
-      const r = await fetch(`${API_URL}${ep}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-      const d = await r.json();
-      if (d.error) { setErrorMessage(d.error); return; }
-      setQuestion(d.question);
-      setQType(Q_TYPES[Math.floor(Math.random() * Q_TYPES.length)]);
-      setAnswer(""); setResult(null);
-    } catch (e) { console.error(e); }
+    const body = hasR
+      ? { role: effectiveRole, resume_text: resumeData, difficulty }
+      : { role: effectiveRole, difficulty };
+    const r = await fetch(`${API_URL}${ep}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const d = await r.json();
+    if (d.error) throw new Error(d.error);
+    if (!d.questions || d.questions.length < 5) throw new Error("Insufficient questions returned.");
+    return d.questions; // array of 5 strings
+  };
+
+  // Sets the active question from the pre-fetched array and assigns a random type.
+  const applyQuestion = (allQuestions, idx) => {
+    setQuestion(allQuestions[idx]);
+    setQType(Q_TYPES[Math.floor(Math.random() * Q_TYPES.length)]);
+    setAnswer("");
+    setResult(null);
   };
 
   const startInterview = async () => {
     setLoading(true);
-    let uploaded = "";
-    if (resumeFile) uploaded = await uploadResume();
-    await generateQuestion(uploaded);
-    setScreen("question");
+    setErrorMessage("");
+    try {
+      let uploaded = "";
+      if (resumeFile) uploaded = await uploadResume();
+      const allQuestions = await fetchAllQuestions(uploaded);
+      setQuestions(allQuestions);
+      setCurrentQuestionIndex(0);
+      applyQuestion(allQuestions, 0);
+      setScreen("question");
+    } catch (e) {
+      console.error(e);
+      setErrorMessage("Failed to load questions. Please try again.");
+    }
     setLoading(false);
   };
 
@@ -1241,8 +1264,10 @@ export default function App() {
   const nextQuestion = async () => {
     if (questionNumber >= 5) { setScreen("results"); return; }
     setNextLoading(true);
+    const nextIdx = currentQuestionIndex + 1;
+    setCurrentQuestionIndex(nextIdx);
     setQuestionNumber(p => p + 1);
-    await generateQuestion(resumeText);
+    applyQuestion(questions, nextIdx);
     setNextLoading(false);
   };
 
@@ -1250,6 +1275,7 @@ export default function App() {
     setScreen("setup"); setRole("Python Developer"); setCustomRole(""); setDifficulty("medium");
     setResumeFile(null); setResumeText(""); setQuestion(""); setAnswer(""); setResult(null);
     setQuestionNumber(1); setScores([]); setHistory([]);
+    setQuestions([]); setCurrentQuestionIndex(0);
   };
 
   const downloadReport = async () => {
