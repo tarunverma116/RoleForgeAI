@@ -19,23 +19,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 from PyPDF2 import PdfReader
-import google.generativeai as genai
 import requests
 import os
 import re
 from datetime import datetime
 
-# =========================
-# ENV + GEMINI
-# =========================
-
 load_dotenv()
-
-genai.configure(
-    api_key=os.getenv("GEMINI_API_KEY")
-)
-
-model = genai.GenerativeModel("gemini-2.5-flash")
 
 def ask_llm(prompt):
 
@@ -58,6 +47,15 @@ def ask_llm(prompt):
     )
 
     data = response.json()
+
+    print("STATUS:", response.status_code)
+    print("DATA:", data)
+
+    if response.status_code != 200:
+        raise Exception(f"OpenRouter Error: {data}")
+
+    if "choices" not in data:
+        raise Exception(f"No choices returned: {data}")
 
     return data["choices"][0]["message"]["content"]
 
